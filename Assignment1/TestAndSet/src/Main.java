@@ -1,47 +1,52 @@
 import java.lang.Thread;
-
-
+import java.util.Scanner;
 
 public class Main
 {
-
-    public int shared = 5;
-    public int lock = 0;
-
+    public static int shared = 5;
+    public static int lock = 0;
     class P1 extends Thread{
-
         int x;
-
         public P1(int x){
             this.x = x;
         }
 
-        private boolean testAndSet(int lock){
-            if(lock == 1) return true;
+        private synchronized boolean testAndSet(){
+            if(lock == 1) {
+                lock = 0;
+                return true;
+            }
+            lock=1;
             return false;
         }
 
         public void run(){
-            while(testAndSet(lock));
-            Main.this.lock = 1;
-            try{
-                Thread.sleep(2000);
-            }catch(InterruptedException err){
-                System.out.println(err);
-            }
-
-            Main.this.shared = this.x;
-            System.out.println("shared is " + Main.this.shared);
-            Main.this.lock = 0;
+            while(testAndSet());
+            shared+=5;
+            lock = 0;
         }
     }
 
     public static void main(String[] args) throws InterruptedException {
-        System.out.println("Hello World");
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("\n*********************** Test And Set ***********************\n");
+        System.out.print("Enter shared value : ");
+        shared = scanner.nextInt();
         P1 p1 = new Main().new P1(1);
         P1 p2 = new Main().new P1(2);
-
+        System.out.println("Shared value must have extra 10");
+        for(int i = 0; i < 5; i++){
+            System.out.print(".");
+            try{
+                Thread.sleep(800);
+            }catch(InterruptedException e){
+                e.printStackTrace();
+            }
+        }
         p1.start();
         p2.start();
+        p1.join();
+        p2.join();
+        System.out.println("\nshared value is now " + shared);
     }
 }
